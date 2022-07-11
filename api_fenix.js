@@ -1,60 +1,7 @@
-
-
-
-
 //import axios
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
-
-//function to replace all types of escaped spaces
-function replaceEscaped(str) {
-    replacer = {
-        '\n': '',
-        '\r': '',
-        '\t': '',
-        '\v': '',
-        '\f': '',
-        '\b': '',
-        '\0': '',
-        '\x0B': '',
-        '\xA0': '',
-        '\u2028': '',
-        '\u2029': '',
-    }
-    for (let key in replacer) {
-        str = str.replace(new RegExp(key, 'g'), replacer[key]);
-    }
-    return str;
-}
-
-
-
-//Convert string to array of chars and iterate over it
-function getNumbersFromString(str) {
-    let arr = [];
-    let temp = [];
-    var numbers = [];
-    arr = str.split('');
-    arr.forEach(function (item, index) {
-        //Check if its a number
-        if (item.match(/^[0-9]$/)) {
-            temp.push(item);
-        }
-        //Check if its a space
-        if (item == 32) {
-            //Join the temp array as a number and push it to the final array
-            if (temp.length > 0) {
-                let num = parseInt(temp.join(''));
-                numbers.push(num);
-                temp = [];
-            }
-        }
-    });
-    return numbers;
-}
-var global = 0
-
 
 async function getCourses(degree) {
     return new Promise(async (resolve, reject) => {
@@ -118,7 +65,6 @@ async function getMinors(lective_year) {
             resolve(output);
         }).catch(error => {
             console.log(error);
-
         })
     })
 }
@@ -140,7 +86,100 @@ async function getMasters(lective_year) {
     })
 }
 
-module.exports = { getMasters, getMinors, getCourses };
+async function getCachedMasters() {
+    return new Promise((resolve, reject) => {
+        fs.readFile('./db/lists/masters.json', 'utf8', (err, data) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(data));
+        });
+    }).catch(error => {
+        console.log(error);
+    });
+}
+
+async function getCachedMinors() {
+    return new Promise((resolve, reject) => {
+        fs.readFile('./db/lists/minors.json', 'utf8', (err, data) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(data));
+        });
+    }).catch(error => {
+        console.log(error);
+    });
+}
+
+async function getCachedCourses(course) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(`./db/${course}.json`, 'utf8', (err, data) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(data));
+        });
+    }).catch(error => {
+        console.log(error);
+    });
+}
+
+
+
+
+module.exports = { getMasters, getMinors, getCourses, getCachedMasters, getCachedMinors, getCachedCourses };
+
+
+//function to replace all types of escaped spaces
+function replaceEscaped(str) {
+    replacer = {
+        '\n': '',
+        '\r': '',
+        '\t': '',
+        '\v': '',
+        '\f': '',
+        '\b': '',
+        '\0': '',
+        '\x0B': '',
+        '\xA0': '',
+        '\u2028': '',
+        '\u2029': '',
+    }
+    for (let key in replacer) {
+        str = str.replace(new RegExp(key, 'g'), replacer[key]);
+    }
+    return str;
+}
+
+
+
+//Convert string to array of chars and iterate over it
+function getNumbersFromString(str) {
+    let arr = [];
+    let temp = [];
+    var numbers = [];
+    arr = str.split('');
+    arr.forEach(function (item, index) {
+        //Check if its a number
+        if (item.match(/^[0-9]$/)) {
+            temp.push(item);
+        }
+        //Check if its a space
+        if (item == 32) {
+            //Join the temp array as a number and push it to the final array
+            if (temp.length > 0) {
+                let num = parseInt(temp.join(''));
+                numbers.push(num);
+                temp = [];
+            }
+        }
+    });
+    return numbers;
+}
+var global = 0
+
+
 
 // //Fucntion to get the courses of a given degree and save them to a file
 // async function getCourses(degree) {
