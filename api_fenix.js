@@ -2,6 +2,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
+const { createRequire } = require('module');
 
 async function getCourses(degree) {
     return new Promise(async (resolve, reject) => {
@@ -16,14 +17,15 @@ async function getCourses(degree) {
             var final = {};
 
             cadeiras.each(function (i, elem) {
-                var name = $(elem).find('a').text().trim();
-                var link = $(elem).find('a').attr('href');
-                var period = $(elem).find('a').next('div').text().trim();
-                var subArea = $(elem).parents('div.level').first().prevAll('h4').first().text();
-                var area = $(elem).parents('div.level').first().parents('div.level').first().prevAll('h4').first().text();
-                var when = period.split('P ').length == 2 ? period.split('P ')[1] : period.split('Sem. ').length == 2 ? period.split('Sem. ')[1] == 1 ? [1, 2] : [3, 4] : "error";
-                var duration = period.split('P ').length == 2 ? "P" : period.split('Sem. ').length == 2 ? "Sem" : "error";
-                var cadeira = { name: name, link: link, period: period, subArea: subArea, area: area, duration: duration, when: when };
+                let name = $(elem).find('a').text().trim();
+                let link = $(elem).find('a').attr('href');
+                let period = $(elem).find('a').next('div').text().trim();
+                let subArea = $(elem).parents('div.level').first().prevAll('h4').first().text();
+                let area = $(elem).parents('div.level').first().parents('div.level').first().prevAll('h4').first().text();
+                let when = period.split('P ').length == 2 ? period.split('P ')[1] : period.split('Sem. ').length == 2 ? period.split('Sem. ')[1] == 1 ? [1, 2] : [3, 4] : "error";
+                let duration = period.split('P ').length == 2 ? "P" : period.split('Sem. ').length == 2 ? "Sem" : "error";
+                let cadeira = { name: name, link: link, period: period, subArea: subArea, area: area, duration: duration, when: when };
+                let credits = $(elem).parent().find('div.col-md-2').find('p').text().split("Créd.")[0].match(/\d+/)[0];
                 cadeirasArray.push(cadeira);
 
 
@@ -31,9 +33,9 @@ async function getCourses(degree) {
                     final[area] = {};
                 }
                 if (final[area][subArea] == undefined) {
-                    final[area][subArea] = [{ name: name, link: link, period: period, subArea: subArea, area: area, duration: duration, when: when, code: link.split('/').pop() }];
+                    final[area][subArea] = [{ name: name, link: link, period: period, degree: degree, subArea: subArea, area: area, duration: duration, when: when, code: link.split('/').pop(), credits: parseInt(credits) }];
                 } else {
-                    final[area][subArea].push({ name: name, link: link, period: period, subArea: subArea, area: area, duration: duration, when: when, code: link.split('/').pop() });
+                    final[area][subArea].push({ name: name, link: link, period: period, degree: degree, subArea: subArea, area: area, duration: duration, when: when, code: link.split('/').pop(), credits: parseInt(credits) });
                 }
 
                 var rule = $(elem).parent('div').parent().find('.rules').first().find('span.rule').text();
@@ -46,7 +48,7 @@ async function getCourses(degree) {
             })
             resolve([final, rules]);
         }).catch(error => {
-            console.log(error);
+            console.log("error courses", error);
         });
     });
 }
@@ -64,7 +66,7 @@ async function getMinors(lective_year) {
             });
             resolve(output);
         }).catch(error => {
-            console.log(error);
+            console.log("error minors");
         })
     })
 }
@@ -81,7 +83,7 @@ async function getMasters(lective_year) {
             });
             resolve(output);
         }).catch(error => {
-            console.log(error);
+            console.log("error masters");
         })
     })
 }
@@ -95,7 +97,7 @@ async function getCachedMasters() {
             resolve(JSON.parse(data));
         });
     }).catch(error => {
-        console.log(error);
+        console.log("error cached masters");
     });
 }
 
@@ -108,7 +110,7 @@ async function getCachedMinors() {
             resolve(JSON.parse(data));
         });
     }).catch(error => {
-        console.log(error);
+        console.log("error cached minors");
     });
 }
 
@@ -121,7 +123,7 @@ async function getCachedCourses(course) {
             resolve(JSON.parse(data));
         });
     }).catch(error => {
-        console.log(error);
+        console.log("error cached courses");
     });
 }
 
